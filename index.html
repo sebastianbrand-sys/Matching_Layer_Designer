@@ -11,7 +11,6 @@
         body { font-family: 'Inter', system-ui, sans-serif; }
         canvas { background: #f8fafc; border-radius: 12px; }
         .slider-label { font-size: 0.85rem; }
-        .mode-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-800">
@@ -20,13 +19,13 @@
         <div class="flex justify-between items-center mb-8">
             <div>
                 <h1 class="text-4xl font-semibold text-white">Akustische Impedanzanpassung</h1>
-                <p class="text-slate-400 mt-1 text-lg">Interaktives Tool für die Vorlesung – Matching Layer</p>
-                <p class="text-emerald-400 text-sm mt-2">--- Dr. Sebastian Brand --- </p>
+                <p class="text-slate-400 mt-1 text-lg">Interaktives Tool für die Vorlesung – Matching Layer (Polymer-Schicht)</p>
+                <p class="text-emerald-400 text-sm mt-2"> --- Dr.Sebastian Brand --- </p>
             </div>
             <div class="text-right">
                 <button onclick="resetToTypicalValues()" 
-                        class="bg-white text-slate-900 hover:bg-emerald-500 hover:text-white px-6 py-3 rounded-2xl font-medium flex items-center gap-2 transition-colors">
-                    <span>🔄 Typische Werte (PZT–Polymer–Gewebe)</span>
+                        class="bg-white text-slate-900 hover:bg-emerald-500 hover:text-white px-5 py-3 rounded-2xl font-medium flex items-center gap-2 transition-colors">
+                    <span>🔄 Typische Werte laden (PZT–Polymer–Gewebe)</span>
                 </button>
             </div>
         </div>
@@ -84,12 +83,13 @@
                         </div>
                         <div class="mt-2 text-xs font-mono">ρ₂ = <span id="rho2_val" class="font-semibold">2800 kg/m³</span></div>
 
+                        <!-- Schichtdicke -->
                         <div class="mt-6">
                             <div class="flex justify-between text-sm mb-2">
                                 <span class="font-medium">Schichtdicke d / λ₂</span>
                                 <span id="d_lambda_val" class="font-mono text-emerald-600">0.25</span>
                             </div>
-                            <input type="range" id="d_lambda" min="0" max="2" step="0.01" value="0.25" 
+                            <input type="range" id="d_lambda" min="0" max="2" step="0.05" value="0.25" 
                                    oninput="updateAll()" class="w-full accent-emerald-500">
                             <div class="text-xs text-slate-500 flex justify-between">
                                 <span>0</span><span>0.25 (λ/4)</span><span>0.5</span><span>1.0</span><span>2.0</span>
@@ -129,43 +129,51 @@
 
             <!-- Main Plot Area -->
             <div class="col-span-12 lg:col-span-8 bg-white rounded-3xl p-6 shadow-xl flex flex-col">
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold">Wellenschwingungen (Momentaufnahme)</h2>
                     
                     <!-- Mode Switch -->
-                    <div class="flex border border-slate-300 rounded-3xl overflow-hidden bg-white">
-                        <button onclick="setMode(0)" id="mode_p" class="mode-btn px-6 py-2.5 font-medium text-sm active">Druck p(x)</button>
-                        <button onclick="setMode(1)" id="mode_v" class="mode-btn px-6 py-2.5 font-medium text-sm">Schnelle v(x)</button>
-                        <button onclick="setMode(2)" id="mode_i" class="mode-btn px-6 py-2.5 font-medium text-sm">Intensität I</button>
+                    <div class="flex border border-slate-300 rounded-2xl overflow-hidden">
+                        <button onclick="setMode(0)" id="mode_p"
+                                class="mode-btn px-5 py-2 font-medium text-sm active">Druck p(x)</button>
+                        <button onclick="setMode(1)" id="mode_v"
+                                class="mode-btn px-5 py-2 font-medium text-sm">Schnelle v(x)</button>
+                        <button onclick="setMode(2)" id="mode_i"
+                                class="mode-btn px-5 py-2 font-medium text-sm">Intensität I (zeitgemittelt)</button>
                     </div>
-
-                    <!-- Copy Button -->
-                    <button onclick="copyChartToClipboard()" 
-                            class="flex items-center gap-2 bg-slate-50 hover:bg-emerald-50 border border-slate-300 hover:border-emerald-200 px-5 py-2.5 rounded-3xl text-sm font-medium transition-colors">
-                        <span class="text-base">📋</span>
-                        <span>Diagramm kopieren</span>
-                    </button>
-
-                    <div class="text-xs font-mono bg-slate-100 px-5 py-2.5 rounded-3xl">
-                        Reflexionskoeffizient |R| = <span id="r_val" class="font-semibold text-rose-600">0.000</span>
+                    
+                    <div class="text-xs font-mono bg-slate-100 px-4 py-2 rounded-2xl">
+                        Reflexionskoeffizient |R| = <span id="r_val" class="font-semibold text-rose-600">0.XXX</span>
                     </div>
                 </div>
 
                 <!-- Chart -->
-                <div class="flex-1 min-h-0 relative">
+                <div class="flex-1 min-h-0">
                     <canvas id="waveChart" class="w-full h-full"></canvas>
                 </div>
 
                 <!-- Component Toggles -->
-                <div class="mt-6 grid grid-cols-8 gap-2 text-xs">
-                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="show_inc" checked onchange="toggleDataset(0)"> <span class="text-blue-600 font-medium">einfallend (Med 1)</span></label>
-                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="show_refl" checked onchange="toggleDataset(1)"> <span class="text-rose-600 font-medium">reflektiert (Med 1)</span></label>
-                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="show_fwd2" checked onchange="toggleDataset(2)"> <span class="text-emerald-600 font-medium">vorwärts (Schicht)</span></label>
-                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="show_bwd2" checked onchange="toggleDataset(3)"> <span class="text-purple-600 font-medium">rückwärts (Schicht)</span></label>
-                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="show_trans" checked onchange="toggleDataset(4)"> <span class="text-cyan-600 font-medium">transmittiert (Med 3)</span></label>
-                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="show_tot1" checked onchange="toggleDataset(5)"> <span class="text-slate-800 font-medium">Gesamt Med 1</span></label>
-                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="show_tot2" checked onchange="toggleDataset(6)"> <span class="text-slate-700 font-medium">Gesamt Med 2</span></label>
-                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="show_tot3" checked onchange="toggleDataset(7)"> <span class="text-teal-700 font-medium">Gesamt Med 3</span></label>
+                <div class="mt-6 grid grid-cols-5 gap-2 text-xs">
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="show_inc" checked onchange="toggleDataset(0)"> 
+                        <span class="text-blue-600 font-medium">einfallend (Med 1)</span>
+                    </label>
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="show_refl" checked onchange="toggleDataset(1)"> 
+                        <span class="text-rose-600 font-medium">reflektiert (Med 1)</span>
+                    </label>
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="show_fwd2" checked onchange="toggleDataset(2)"> 
+                        <span class="text-emerald-600 font-medium">vorwärts (Schicht)</span>
+                    </label>
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="show_bwd2" checked onchange="toggleDataset(3)"> 
+                        <span class="text-purple-600 font-medium">rückwärts (Schicht)</span>
+                    </label>
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="show_trans" checked onchange="toggleDataset(4)"> 
+                        <span class="text-cyan-600 font-medium">transmittiert (Med 3)</span>
+                    </label>
                 </div>
 
                 <!-- Numerical Info -->
@@ -186,7 +194,7 @@
             </div>
         </div>
 
-        <!-- Intensity Bar Chart -->
+        <!-- Intensity Bar Chart (nur bei Intensitäts-Modus sichtbar) -->
         <div id="intensity_panel" class="hidden mt-6 bg-white rounded-3xl p-6 shadow-xl">
             <h3 class="font-semibold mb-4">Zeitgemittelte Intensitäten der einzelnen Wellenanteile</h3>
             <canvas id="intensityChart" class="h-48"></canvas>
@@ -194,8 +202,8 @@
         </div>
 
         <div class="text-center text-slate-400 text-xs mt-8">
-            Grenzflächen sind jetzt klar als gestrichelte Linien markiert • Gesamtwellen zeigen Kontinuität (p₁ = p₂ und v₁ = v₂) • 
-            Numerisch stabil auch bei Z₁ &lt; Z₃ oder exakt λ₂/4
+            Tool für deine Vorlesung • Alle Wellenanteile phasenrichtig berechnet • 
+            Bei λ₂/4 und Z₂ ≈ √(Z₁·Z₃) verschwindet die Reflexion im Medium 1 fast komplett
         </div>
     </div>
 
@@ -213,7 +221,6 @@
             }
             div(b) {
                 const den = b.re * b.re + b.im * b.im;
-                if (den === 0) return new C(NaN, NaN); // Sicherheit
                 return new C(
                     (this.re * b.re + this.im * b.im) / den,
                     (this.im * b.re - this.re * b.im) / den
@@ -221,94 +228,40 @@
             }
             abs() { return Math.sqrt(this.re * this.re + this.im * this.im); }
             arg() { return Math.atan2(this.im, this.re); }
+            conj() { return new C(this.re, -this.im); }
         }
 
         // ====================== GLOBALS ======================
         let chartWave = null;
         let chartIntensity = null;
-        let currentMode = 0;
+        let currentMode = 0; // 0=Druck, 1=Schnelle, 2=Intensität
 
-        let f = 1.0;
-        let rho1 = 7500, c1 = 4000;
-        let z2 = 7.0, c2 = 2500;
-        let rho3 = 1000, c3 = 1540;
-        let d_lambda = 0.25;
-        let d = 0;                     // aktuelle Schichtdicke in Metern
+        // Parameters (default)
+        let f = 1.0;           // MHz
+        let rho1 = 7500, c1 = 4000;   // Med 1
+        let z2 = 7.0, c2 = 2500;      // Layer
+        let rho3 = 1000, c3 = 1540;   // Med 3
+
+        let d_lambda = 0.25;   // d / λ₂
 
         let Ai = new C(1, 0);
         let Ar = new C(0, 0), At = new C(0, 0), Br = new C(0, 0), Ct = new C(0, 0);
 
-        let k1 = 0, k2 = 0, k3 = 0, Z1 = 0, Z3 = 0, lambda2 = 0;
+        let k1 = 0, k2 = 0, k3 = 0, d = 0, Z1 = 0, Z3 = 0, lambda2 = 0;
 
+        // Dataset indices for Chart.js
         const datasetsInfo = [
-            { name: "einfallend", color: "#3b82f6", dash: [8, 3], width: 2.5 },
-            { name: "reflektiert", color: "#ef4444", dash: [8, 3], width: 2.5 },
-            { name: "vorwärts Schicht", color: "#10b981", dash: [8, 3], width: 2.5 },
-            { name: "rückwärts Schicht", color: "#8b5cf6", dash: [8, 3], width: 2.5 },
-            { name: "transmittiert", color: "#06b67f", dash: [], width: 3 },
-            { name: "gesamt med1", color: "#1e2937", dash: [], width: 4 },
-            { name: "gesamt med2", color: "#334155", dash: [], width: 3.5 },
-            { name: "gesamt med3", color: "#0f766e", dash: [], width: 3.5 }
+            { name: "einfallend", color: "#3b82f6", dash: [8, 3] },   // 0
+            { name: "reflektiert", color: "#ef4444", dash: [8, 3] },  // 1
+            { name: "vorwärts Schicht", color: "#10b981", dash: [8, 3] }, // 2
+            { name: "rückwärts Schicht", color: "#8b5cf6", dash: [8, 3] },// 3
+            { name: "transmittiert", color: "#06b67f" }               // 4
         ];
 
-        // ====================== VERTIKALE GRENZFLÄCHEN + MEDIUM-LABELS (Plugin) ======================
-        const verticalLinesPlugin = {
-            id: 'verticalLines',
-            beforeDraw(chart) {
-                const { ctx, chartArea, scales } = chart;
-                const xScale = scales.x;
-                const d_mm_current = d * 1000;
-
-                ctx.save();
-                ctx.strokeStyle = '#475569';
-                ctx.lineWidth = 2.8;
-                ctx.setLineDash([5, 4]);
-
-                // 1. Grenzfläche (x = 0)
-                let xPix = xScale.getPixelForValue(0);
-                ctx.beginPath();
-                ctx.moveTo(xPix, chartArea.top + 10);
-                ctx.lineTo(xPix, chartArea.bottom - 10);
-                ctx.stroke();
-                ctx.fillStyle = '#475569';
-                ctx.font = '600 11px Inter';
-                ctx.textAlign = 'center';
-                ctx.fillText('1. Grenzfläche', xPix, chartArea.top - 8);
-
-                // 2. Grenzfläche (x = d)
-                xPix = xScale.getPixelForValue(d_mm_current);
-                ctx.beginPath();
-                ctx.moveTo(xPix, chartArea.top + 10);
-                ctx.lineTo(xPix, chartArea.bottom - 10);
-                ctx.stroke();
-                ctx.fillText('2. Grenzfläche', xPix, chartArea.top - 8);
-
-                // Medium-Beschriftungen (klar markiert!)
-                ctx.font = '500 13px Inter';
-                ctx.textAlign = 'center';
-
-                // Med 1 (links von 0)
-                const med1x = xScale.getPixelForValue(-0.9);
-                ctx.fillStyle = '#3b82f6';
-                ctx.fillText('Medium 1 (PZT)', med1x, chartArea.top - 32);
-
-                // Med 2 (zwischen 0 und d)
-                const med2x = xScale.getPixelForValue(d_mm_current / 2);
-                ctx.fillStyle = '#10b981';
-                ctx.fillText('Medium 2 (Polymer)', med2x, chartArea.top - 32);
-
-                // Med 3 (rechts von d)
-                const med3x = xScale.getPixelForValue(d_mm_current + 0.9);
-                ctx.fillStyle = '#06b67f';
-                ctx.fillText('Medium 3 (Gewebe)', med3x, chartArea.top - 32);
-
-                ctx.restore();
-            }
-        };
-
-        // ====================== PHYSICS (JETZT NUMERISCH STABIL!) ======================
+        // ====================== PHYSICS ======================
         function computeAll() {
-            Z1 = rho1 * c1 / 1e6;
+            // Update derived values
+            Z1 = rho1 * c1 / 1e6;                    // MRayl
             Z3 = rho3 * c3 / 1e6;
             const omega = 2 * Math.PI * f * 1e6;
             lambda2 = c2 / (f * 1e6);
@@ -317,31 +270,35 @@
             k2 = omega / c2;
             k3 = omega / c3;
 
-            // STABILE Berechnung der Eingangsimpedanz (sin/cos statt tan → kein NaN bei λ/4!)
-            const coskd = Math.cos(k2 * d);
-            const sinkd = Math.sin(k2 * d);
-            const num = new C(Z3 * coskd, z2 * sinkd);
-            const den = new C(z2 * coskd, Z3 * sinkd);
+            // Input impedance of the layer + Med3
+            const tan_kd = Math.tan(k2 * d);
+            const j = new C(0, 1);
+            const num = new C(Z3, 0).add(j.mul(new C(z2 * tan_kd, 0)));
+            const den = new C(z2, 0).add(j.mul(new C(Z3 * tan_kd, 0)));
             const ratio = num.div(den);
             const Zin = (new C(z2, 0)).mul(ratio);
 
+            // Reflection coefficient
             const Z1c = new C(Z1, 0);
             const R = Zin.sub(Z1c).div(Zin.add(Z1c));
             Ar = R.mul(Ai);
 
+            // Pressure and velocity at x=0
             const p0 = Ai.add(Ar);
             const v0 = Ai.sub(Ar).div(Z1c);
 
+            // Amplitudes in layer
             const Z2c = new C(z2, 0);
             At = p0.add(v0.mul(Z2c)).mul(new C(0.5, 0));
             Br = p0.sub(v0.mul(Z2c)).mul(new C(0.5, 0));
 
+            // Transmitted amplitude
             const exp_m = new C(Math.cos(k2 * d), -Math.sin(k2 * d));
             const exp_p = new C(Math.cos(k2 * d), Math.sin(k2 * d));
             const pd = At.mul(exp_m).add(Br.mul(exp_p));
             Ct = pd;
 
-            // Phase-Korrektur → Druckmaximum bei x=0
+            // Phase correction → Druckmaximum genau bei x=0 (p(0) reell & positiv)
             const p0_final = Ai.add(Ar);
             const phi = -p0_final.arg();
             const phaseFactor = new C(Math.cos(phi), Math.sin(phi));
@@ -351,7 +308,7 @@
             Br = Br.mul(phaseFactor);
             Ct = Ct.mul(phaseFactor);
 
-            // UI-Updates
+            // Update UI numbers
             document.getElementById("z1_val").textContent = Z1.toFixed(2) + " MRayl";
             document.getElementById("z3_val").textContent = Z3.toFixed(2) + " MRayl";
             document.getElementById("rho2_val").textContent = (z2 * 1e6 / c2).toFixed(0) + " kg/m³";
@@ -359,23 +316,25 @@
             document.getElementById("d_mm_val").innerHTML = `d = ${(d * 1000).toFixed(2)} mm &nbsp;&nbsp; λ₂ = ${(lambda2 * 1000).toFixed(2)} mm`;
             document.getElementById("r_val").textContent = Ar.abs().toFixed(3);
             document.getElementById("zin_val").textContent = Zin.abs().toFixed(2) + " MRayl";
+            const T = Ct.abs() * Math.sqrt(Z1 / Z3); // power transmission approx
             document.getElementById("t_val").textContent = Ct.abs().toFixed(3);
             const i_net = (Ai.abs() * Ai.abs() - Ar.abs() * Ar.abs()) / 2;
             document.getElementById("i_net_val").textContent = i_net.toFixed(3);
         }
 
-        // ====================== PLOT DATA ======================
+        // ====================== PLOT DATA GENERATION ======================
         function generatePlotData() {
             computeAll();
 
             const lambda1 = c1 / (f * 1e6);
             const lambda3 = c3 / (f * 1e6);
 
+            // x-Bereiche in Meter
             const x1 = Array.from({ length: 180 }, (_, i) => -1.8 * lambda1 + i * (1.8 * lambda1) / 179);
             const x2 = Array.from({ length: 120 }, (_, i) => i * d / 119);
             const x3 = Array.from({ length: 180 }, (_, i) => d + i * (1.8 * lambda3) / 179);
 
-            const xAll = [...x1, ...x2, ...x3].map(v => v * 1000);
+            const xAll = [...x1, ...x2, ...x3].map(v => v * 1000); // mm
 
             const dataInc = [], dataRefl = [], dataFwd2 = [], dataBwd2 = [], dataTrans = [];
             const dataTot1 = [], dataTot2 = [], dataTot3 = [];
@@ -384,6 +343,7 @@
             const Z2c = new C(z2, 0);
             const Z3c = new C(Z3, 0);
 
+            // Helper to evaluate wave at x (in meter)
             function evalWave(x) {
                 let p_inc = new C(0,0), p_refl = new C(0,0);
                 let p_fwd2 = new C(0,0), p_bwd2 = new C(0,0);
@@ -396,27 +356,30 @@
                     p_inc = Ai.mul(exp1m);
                     p_refl = Ar.mul(exp1p);
                 }
+
                 if (x >= 0 && x <= d) {
                     const exp2m = new C(Math.cos(k2 * x), -Math.sin(k2 * x));
                     const exp2p = new C(Math.cos(k2 * x), Math.sin(k2 * x));
                     p_fwd2 = At.mul(exp2m);
                     p_bwd2 = Br.mul(exp2p);
                 }
+
                 if (x >= d) {
                     const exp3 = new C(Math.cos(k3 * (x - d)), -Math.sin(k3 * (x - d)));
                     p_trans = Ct.mul(exp3);
                 }
+
                 return { p_inc, p_refl, p_fwd2, p_bwd2, p_trans };
             }
 
             for (let i = 0; i < xAll.length; i++) {
-                const x = xAll[i] / 1000;
+                const x = xAll[i] / 1000; // back to meter
                 const w = evalWave(x);
 
                 let val_inc = 0, val_refl = 0, val_fwd = 0, val_bwd = 0, val_trans = 0;
-                let tot1 = null, tot2 = null, tot3 = null;
+                let tot1 = 0, tot2 = 0, tot3 = 0;
 
-                if (currentMode === 0) { // Druck
+                if (currentMode === 0) { // Druck p
                     val_inc = w.p_inc.re;
                     val_refl = w.p_refl.re;
                     val_fwd = w.p_fwd2.re;
@@ -425,9 +388,10 @@
                     if (x <= 0) tot1 = (w.p_inc.add(w.p_refl)).re;
                     if (x >= 0 && x <= d) tot2 = (w.p_fwd2.add(w.p_bwd2)).re;
                     if (x >= d) tot3 = w.p_trans.re;
-                } else if (currentMode === 1) { // Schnelle
+                } 
+                else if (currentMode === 1) { // Schnelle v
                     val_inc = (w.p_inc.div(Z1c)).re;
-                    val_refl = (w.p_refl.div(Z1c)).mul(new C(-1,0)).re;
+                    val_refl = (w.p_refl.div(Z1c)).mul(new C(-1,0)).re; // backward sign
                     if (x >= 0 && x <= d) {
                         val_fwd = (w.p_fwd2.div(Z2c)).re;
                         val_bwd = (w.p_bwd2.div(Z2c)).mul(new C(-1,0)).re;
@@ -436,15 +400,25 @@
                     if (x <= 0) tot1 = (w.p_inc.sub(w.p_refl)).div(Z1c).re;
                     if (x >= 0 && x <= d) tot2 = (w.p_fwd2.sub(w.p_bwd2)).div(Z2c).re;
                     if (x >= d) tot3 = (w.p_trans.div(Z3c)).re;
-                } else { // Intensität
+                } 
+                else { // Intensität (zeitgemittelt) – horizontale Linien
                     const I_inc = Ai.abs() * Ai.abs() / (2 * Z1);
                     const I_refl = Ar.abs() * Ar.abs() / (2 * Z1);
                     const I_fwd2 = At.abs() * At.abs() / (2 * z2);
                     const I_bwd2 = Br.abs() * Br.abs() / (2 * z2);
                     const I_trans = Ct.abs() * Ct.abs() / (2 * Z3);
-                    if (x <= 0) { val_inc = I_inc; val_refl = -I_refl; }
-                    if (x >= 0 && x <= d) { val_fwd = I_fwd2; val_bwd = -I_bwd2; }
+
+                    if (x <= 0) {
+                        val_inc = I_inc;
+                        val_refl = -I_refl; // negative Richtung
+                    }
+                    if (x >= 0 && x <= d) {
+                        val_fwd = I_fwd2;
+                        val_bwd = -I_bwd2;
+                    }
                     if (x >= d) val_trans = I_trans;
+
+                    // Für Intensität keine Total-Wellen, nur Komponenten
                 }
 
                 dataInc.push(x <= 0 ? val_inc : null);
@@ -452,13 +426,16 @@
                 dataFwd2.push((x >= 0 && x <= d) ? val_fwd : null);
                 dataBwd2.push((x >= 0 && x <= d) ? val_bwd : null);
                 dataTrans.push(x >= d ? val_trans : null);
-
-                dataTot1.push(tot1);
-                dataTot2.push(tot2);
-                dataTot3.push(tot3);
             }
 
-            return { x: xAll, inc: dataInc, refl: dataRefl, fwd2: dataFwd2, bwd2: dataBwd2, trans: dataTrans, tot1: dataTot1, tot2: dataTot2, tot3: dataTot3 };
+            return {
+                x: xAll,
+                inc: dataInc,
+                refl: dataRefl,
+                fwd2: dataFwd2,
+                bwd2: dataBwd2,
+                trans: dataTrans
+            };
         }
 
         // ====================== CHART UPDATE ======================
@@ -471,27 +448,24 @@
                     type: 'line',
                     data: {
                         labels: data.x,
-                        datasets: datasetsInfo.map((info, i) => ({
-                            label: info.name,
-                            data: data[[ 'inc','refl','fwd2','bwd2','trans','tot1','tot2','tot3' ][i]],
-                            borderColor: info.color,
-                            borderDash: info.dash,
-                            borderWidth: info.width,
-                            tension: 0.1,
-                            hidden: false
-                        }))
+                        datasets: [
+                            { label: 'einfallend', data: data.inc, borderColor: datasetsInfo[0].color, borderDash: datasetsInfo[0].dash, borderWidth: 2.5, tension: 0.1, hidden: false },
+                            { label: 'reflektiert', data: data.refl, borderColor: datasetsInfo[1].color, borderDash: datasetsInfo[1].dash, borderWidth: 2.5, tension: 0.1, hidden: false },
+                            { label: 'vorwärts Schicht', data: data.fwd2, borderColor: datasetsInfo[2].color, borderDash: datasetsInfo[2].dash, borderWidth: 2.5, tension: 0.1, hidden: false },
+                            { label: 'rückwärts Schicht', data: data.bwd2, borderColor: datasetsInfo[3].color, borderDash: datasetsInfo[3].dash, borderWidth: 2.5, tension: 0.1, hidden: false },
+                            { label: 'transmittiert', data: data.trans, borderColor: datasetsInfo[4].color, borderWidth: 3, tension: 0.1, hidden: false }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
-                            x: { title: { display: true, text: 'Position x [mm]' }, grid: { color: '#e2e8f0' } },
-                            y: { title: { display: true, text: currentMode === 0 ? 'Druck p (normiert)' : currentMode === 1 ? 'Schnelle v (normiert)' : 'Intensität I (normiert)' }, grid: { color: '#e2e8f0' } }
+                            x: { title: { display: false, text: 'Position x [mm]' }, grid: { color: '#e2e8f0' } },
+                            y: { title: { display: false, text: currentMode === 0 ? 'Druck p (normiert)' : currentMode === 1 ? 'Schnelle v (normiert)' : 'Intensität I (normiert)' }, grid: { color: '#e2e8f0' } }
                         },
-                        animation: { duration: 300 }
-                    },
-                    plugins: [verticalLinesPlugin]
+                        animation: { duration: 350 }
+                    }
                 });
             } else {
                 chartWave.data.labels = data.x;
@@ -500,17 +474,19 @@
                 chartWave.data.datasets[2].data = data.fwd2;
                 chartWave.data.datasets[3].data = data.bwd2;
                 chartWave.data.datasets[4].data = data.trans;
-                chartWave.data.datasets[5].data = data.tot1;
-                chartWave.data.datasets[6].data = data.tot2;
-                chartWave.data.datasets[7].data = data.tot3;
                 chartWave.options.scales.y.title.text = currentMode === 0 ? 'Druck p (normiert)' : currentMode === 1 ? 'Schnelle v (normiert)' : 'Intensität I (normiert)';
+				chartWave.options.scales.x.ticks = { display: false };
+				chartWave.options.scales.y.ticks = { display: false };
                 chartWave.update();
             }
         }
 
         function updateIntensityBar() {
             const panel = document.getElementById("intensity_panel");
-            if (currentMode !== 2) { panel.classList.add("hidden"); return; }
+            if (currentMode !== 2) {
+                panel.classList.add("hidden");
+                return;
+            }
             panel.classList.remove("hidden");
 
             computeAll();
@@ -527,8 +503,21 @@
                 const ctx = document.getElementById("intensityChart").getContext("2d");
                 chartIntensity = new Chart(ctx, {
                     type: 'bar',
-                    data: { labels, datasets: [{ label: 'Intensität (→ +x Richtung)', data: values, backgroundColor: ['#3b82f6','#ef4444','#10b981','#8b5cf6','#06b67f'], borderColor: '#fff', borderWidth: 2 }] },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'I (normiert)' } } } }
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Intensität (positiv = +x Richtung)',
+                            data: values,
+                            backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#8b5cf6', '#06b67f'],
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { title: { display: true, text: 'I (normiert)' } } }
+                    }
                 });
             } else {
                 chartIntensity.data.datasets[0].data = values;
@@ -536,17 +525,17 @@
             }
         }
 
-        // ====================== UI ======================
+        // ====================== UI HELPERS ======================
         function updateAll() {
             f = parseFloat(document.getElementById("f_slider").value);
             document.getElementById("f_val").textContent = f.toFixed(1) + " MHz";
 
-            rho1 = parseFloat(document.getElementById("rho1").value) || 1;
-            c1 = parseFloat(document.getElementById("c1").value) || 1;
-            z2 = parseFloat(document.getElementById("z2").value) || 1;
-            c2 = parseFloat(document.getElementById("c2").value) || 1;
-            rho3 = parseFloat(document.getElementById("rho3").value) || 1;
-            c3 = parseFloat(document.getElementById("c3").value) || 1;
+            rho1 = parseFloat(document.getElementById("rho1").value);
+            c1 = parseFloat(document.getElementById("c1").value);
+            z2 = parseFloat(document.getElementById("z2").value);
+            c2 = parseFloat(document.getElementById("c2").value);
+            rho3 = parseFloat(document.getElementById("rho3").value);
+            c3 = parseFloat(document.getElementById("c3").value);
             d_lambda = parseFloat(document.getElementById("d_lambda").value);
 
             updateWaveChart();
@@ -555,6 +544,7 @@
 
         function setMode(mode) {
             currentMode = mode;
+            // Highlight active button
             document.querySelectorAll(".mode-btn").forEach((b, i) => {
                 if (i === mode) b.classList.add("bg-emerald-500", "text-white");
                 else b.classList.remove("bg-emerald-500", "text-white");
@@ -571,32 +561,19 @@
             }
         }
 
-        async function copyChartToClipboard() {
-            const canvas = document.getElementById('waveChart');
-            if (!canvas) return;
-            try {
-                const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                showToast('✅ Diagramm kopiert!');
-            } catch (err) {
-                showToast('❌ Kopieren fehlgeschlagen', true);
-            }
-        }
-
-        function showToast(msg, error = false) {
-            const toast = document.createElement('div');
-            toast.className = `fixed bottom-6 right-6 px-6 py-3 rounded-3xl shadow-2xl text-white flex items-center gap-2 ${error ? 'bg-red-500' : 'bg-emerald-500'}`;
-            toast.innerHTML = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2200);
-        }
-
         function optimizeLayer() {
+            // Optimale Werte
             const optZ2 = Math.sqrt(Z1 * Z3);
             document.getElementById("z2").value = optZ2.toFixed(2);
             document.getElementById("d_lambda").value = 0.25;
+            // Update everything
             updateAll();
-            showToast('✅ Optimale Anpassung geladen (λ₂/4 + Z₂ = √(Z₁·Z₃))');
+            // Show message
+            const msg = document.createElement("div");
+            msg.textContent = "✅ Optimale Anpassung geladen: Reflexion sollte jetzt minimal sein!";
+            msg.className = "absolute bottom-8 right-8 bg-emerald-600 text-white text-sm px-6 py-3 rounded-2xl shadow-2xl";
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 2800);
         }
 
         function resetToTypicalValues() {
@@ -613,10 +590,13 @@
 
         // ====================== INIT ======================
         window.onload = function () {
+            // Tailwind
             tailwind.config = { content: ["*"] };
+            // Initial computation
             updateAll();
+            // Initial chart
             updateWaveChart();
-            console.log("%c✅ Tool vollständig repariert – Grenzflächen klar markiert, stabil bei jeder Impedanz!", "color:#10b981; font-size:14px");
+            console.log("%c✅ Interaktives Akustik-Tool geladen – viel Spaß in der Vorlesung!", "color:#10b981; font-size:13px");
         };
     </script>
 </body>
